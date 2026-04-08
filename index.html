@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Танюше ❤️</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: #000;
+    font-family: 'Georgia', serif;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+  }
+
+  /* Звёзды */
+  .stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    width: 2px;
+    height: 2px;
+    opacity: 0.6;
+    animation: twinkle 2s infinite alternate;
+  }
+  @keyframes twinkle {
+    0% { opacity: 0.2; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* Сцены */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+    background: transparent;
+    z-index: 1;
+  }
+  .scene.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .text {
+    font-size: 1.5rem;
+    max-width: 600px;
+    line-height: 1.5;
+    background: rgba(0,0,0,0.6);
+    padding: 20px;
+    border-radius: 40px;
+    backdrop-filter: blur(8px);
+    text-shadow: 0 0 10px #ff4d6d;
+  }
+
+  /* Кнопки вопроса */
+  .buttons {
+    margin-top: 35px;
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+  }
+  button {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  #yesBtn {
+    background: #ff4d6d;
+    color: white;
+    box-shadow: 0 0 15px #ff4d6d;
+  }
+  #noBtn {
+    background: white;
+    color: #ff4d6d;
+  }
+  button:active {
+    transform: scale(0.96);
+  }
+
+  /* Индикатор точек */
+  .dots {
+    position: fixed;
+    bottom: 25px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 10px;
+    transition: 0.3s;
+  }
+  .dot.active {
+    background: #ff4d6d;
+    width: 24px;
+  }
+
+  /* Финальный экран (после "Да") */
+  #final {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    overflow-y: auto;
+    padding: 20px;
+    animation: fadeIn 0.8s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .big {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    animation: pulse 1.5s infinite alternate;
+    background: linear-gradient(135deg, #ff9a9e, #ff4d6d);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  @keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
+  }
+
+  /* Коллаж для фото (в финале) */
+  .final-collage {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 90%;
+    max-width: 360px;
+    margin-top: 30px;
+  }
+  .collage-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+  .collage-item {
+    flex: 1;
+    text-align: center;
+  }
+  .collage-item img {
+    width: 100%;
+    border-radius: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    background: #1a1a1a;
+  }
+  .caption {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    background: rgba(255,77,109,0.7);
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 40px;
+    font-style: italic;
+  }
+
+  /* Плавающее сообщение для "Не знаю" */
+  .float-msg {
+    position: fixed;
+    bottom: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff4d6d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    white-space: nowrap;
+    animation: float 1.8s forwards;
+    z-index: 30;
+    font-weight: bold;
+  }
+  @keyframes float {
+    0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-40px); visibility: hidden; }
+  }
+
+  /* Подсказка навигации */
+  .nav-hint {
+    position: fixed;
+    bottom: 18px;
+    left: 18px;
+    font-size: 11px;
+    background: rgba(0,0,0,0.5);
+    padding: 6px 12px;
+    border-radius: 30px;
+    pointer-events: none;
+    z-index: 10;
+    font-family: monospace;
+  }
+
+  @media (max-width: 550px) {
+    .text { font-size: 1.2rem; }
+    .big { font-size: 2rem; }
+    button { padding: 10px 20px; font-size: 1rem; }
+    .caption { font-size: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<audio id="bgMusic" loop preload="auto">
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Сцены (без фото, фото в финале) -->
+<div class="scene active" id="scene0">
+  <div class="text">✨ Я долго думал… стоит ли говорить это… ✨</div>
+</div>
+<div class="scene" id="scene1">
+  <div class="text">🌙 Но если не сейчас… то когда… 🌙</div>
+</div>
+<div class="scene" id="scene2">
+  <div class="text">💖 Ты — это что-то особенное в моей жизни… 💖</div>
+</div>
+<div class="scene" id="scene3">
+  <div class="text" style="white-space: pre-line;">
+    Я увезу тебя туда, где время — шёпот,
+    Где по утрам нас будет лошадь ждать…
+    
+    И если честно…
+    Мне просто хорошо, когда ты рядом.
+  </div>
+</div>
+<div class="scene" id="scene4">
+  <div class="text">Ты пойдёшь со мной дальше? ❤️</div>
+  <div class="buttons">
+    <button id="yesBtn">Да 💕</button>
+    <button id="noBtn">Не знаю 🙈</button>
+  </div>
+</div>
+
+<!-- Финальный экран (показывается после "Да") -->
+<div id="final">
+  <div class="big">Я люблю тебя ❤️</div>
+  <div style="margin-bottom: 20px;">И буду выбирать тебя снова и снова</div>
+  
+  <!-- Коллаж с фото (в самом конце) -->
+  <div class="final-collage">
+    <div class="collage-row">
+      <div class="collage-item">
+        <img src="photo1.jpg" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'14\' fill=\'%23ff8c94\' text-anchor=\'middle\'%3E❤️%3C/text%3E%3C/svg%3E'">
+        <div class="caption">✨ Твой смех — мой компас ✨</div>
+      </div>
+      <div class="collage-item">
+        <img src="photo2.jpg" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'14\' fill=\'%23ff8c94\' text-anchor=\'middle\'%3E💕%3C/text%3E%3C/svg%3E'">
+        <div class="caption">💫 Твои глаза — мой дом 💫</div>
+      </div>
+    </div>
+    <div class="collage-row">
+      <div class="collage-item">
+        <img src="photo3.jpg" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'14\' fill=\'%23ff8c94\' text-anchor=\'middle\'%3E🌟%3C/text%3E%3C/svg%3E'">
+        <div class="caption">🌟 Каждый миг с тобой — подарок 🌟</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="nav-hint">👈 Левая половина — назад | Правая половина — вперёд 👉</div>
+
+<script>
+  // ========== 1. ЗВЁЗДЫ ==========
+  const starsContainer = document.getElementById('stars');
+  for (let i = 0; i < 180; i++) {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.animationDuration = Math.random() * 2 + 1 + 's';
+    starsContainer.appendChild(star);
+  }
+
+  // ========== 2. УПРАВЛЕНИЕ СЦЕНАМИ (назад/вперёд с задержкой) ==========
+  const scenes = document.querySelectorAll('.scene');
+  let currentIndex = 0;
+  let finished = false;
+  let canSwitch = true;  // защита от быстрых кликов
+  let autoTimer = null;
+
+  const dotsDiv = document.getElementById('dots');
+  function updateDots() {
+    dotsDiv.innerHTML = '';
+    for (let i = 0; i < scenes.length; i++) {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (i === currentIndex) dot.classList.add('active');
+      dotsDiv.appendChild(dot);
+    }
+  }
+
+  function goToScene(index) {
+    if (finished) return false;
+    if (index < 0 || index >= scenes.length) return false;
+    if (!canSwitch) return false;
+    
+    scenes[currentIndex].classList.remove('active');
+    currentIndex = index;
+    scenes[currentIndex].classList.add('active');
+    updateDots();
+    
+    // Блокируем переключение на 0.6 секунды
+    canSwitch = false;
+    setTimeout(() => { canSwitch = true; }, 600);
+    
+    // Если дошли до последней сцены (с кнопками) — отменяем автотаймер
+    if (currentIndex === scenes.length - 1) {
+      if (autoTimer) clearTimeout(autoTimer);
+    } else {
+      startAutoTimer();
+    }
+    return true;
+  }
+
+  function nextScene() {
+    if (currentIndex < scenes.length - 1) {
+      goToScene(currentIndex + 1);
+    }
+  }
+
+  function prevScene() {
+    if (currentIndex > 0) {
+      goToScene(currentIndex - 1);
+    }
+  }
+
+  // Авто-переключение через 5 секунд (для первых сцен)
+  function startAutoTimer() {
+    if (autoTimer) clearTimeout(autoTimer);
+    if (finished) return;
+    if (currentIndex === scenes.length - 1) return;
+    autoTimer = setTimeout(() => {
+      nextScene();
+    }, 5000);
+  }
+
+  // ========== 3. НАВИГАЦИЯ ПО КЛИКУ (лево/право) ==========
+  function handleNav(e) {
+    if (finished) return;
+    // Если клик по кнопке — не переключаем сцену
+    if (e.target.closest('button')) return;
+    // На последней сцене (вопрос) клик не переключает, только кнопки
+    if (currentIndex === scenes.length - 1) return;
+    
+    const half = window.innerWidth / 2;
+    const clientX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0);
+    if (clientX < half) {
+      prevScene();
+    } else {
+      nextScene();
+    }
+  }
+  document.body.addEventListener('click', handleNav);
+  document.body.addEventListener('touchstart', handleNav, { passive: false });
+
+  // ========== 4. МУЗЫКА ПО ПЕРВОМУ КАСАНИЮ ==========
+  const music = document.getElementById('bgMusic');
+  let musicStarted = false;
+  function startMusic() {
+    if (musicStarted) return;
+    music.volume = 0.4;
+    music.muted = false;
+    music.play().catch(e => console.log("Музыка не загружена"));
+    musicStarted = true;
+  }
+  // Первое касание любой части экрана запускает музыку
+  const unlockMusic = () => {
+    startMusic();
+    document.removeEventListener('click', unlockMusic);
+    document.removeEventListener('touchstart', unlockMusic);
+  };
+  document.addEventListener('click', unlockMusic);
+  document.addEventListener('touchstart', unlockMusic);
+
+  // ========== 5. КНОПКА "ДА" — ФИНАЛ С ФОТО ==========
+  const finalDiv = document.getElementById('final');
+  const yesButton = document.getElementById('yesBtn');
+  const noButton = document.getElementById('noBtn');
+
+  yesButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (finished) return;
+    finished = true;
+    if (autoTimer) clearTimeout(autoTimer);
+    // Скрываем все сцены и точки
+    scenes.forEach(s => s.classList.remove('active'));
+    dotsDiv.style.display = 'none';
+    // Показываем финал
+    finalDiv.style.display = 'flex';
+    // Музыка уже может играть, но на всякий случай запускаем
+    startMusic();
+  });
+
+  // ========== 6. КНОПКА "НЕ ЗНАЮ" (милые сообщения) ==========
+  let noClickCount = 0;
+  noButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (finished) return;
+    noClickCount++;
+    const messages = [
+      "💕 Ну пожалуйста, соглашайся! 💕",
+      "😊 Ты же знаешь, что ответ 'Да' 💖",
+      "❤️ Я всё равно буду ждать только тебя!",
+      "✨ Ты — моя радость, нажми 'Да' ✨"
+    ];
+    const msgText = messages[Math.min(noClickCount-1, messages.length-1)];
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'float-msg';
+    msgDiv.innerText = msgText;
+    document.body.appendChild(msgDiv);
+    setTimeout(() => msgDiv.remove(), 1800);
+    // Анимация кнопки "Да"
+    yesButton.style.transform = 'scale(1.08)';
+    setTimeout(() => yesButton.style.transform = '', 200);
+    if (noClickCount >= 2) {
+      noButton.style.transform = 'scale(0.94)';
+      setTimeout(() => noButton.style.transform = '', 200);
+    }
+  });
+
+  // ========== 7. ИНИЦИАЛИЗАЦИЯ ==========
+  function init() {
+    scenes.forEach((s, idx) => {
+      if (idx === 0) s.classList.add('active');
+      else s.classList.remove('active');
+    });
+    currentIndex = 0;
+    finished = false;
+    finalDiv.style.display = 'none';
+    dotsDiv.style.display = 'flex';
+    updateDots();
+    startAutoTimer();
+  }
+  init();
+</script>
+</body>
+</html>
